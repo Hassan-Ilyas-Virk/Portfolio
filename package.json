@@ -1,5 +1,5 @@
 {
-  "name": "portfolio",
+  "name": "3d-glass-effect",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,19 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@gltf-transform/core": "^4.1.4",
-    "@gltf-transform/functions": "^4.1.4",
-    "@heroicons/react": "^2.1.1",
-    "@react-three/drei": "^9.99.5",
-    "@react-three/fiber": "^8.15.16",
-    "framer-motion": "^11.0.8",
-    "next": "14.1.0",
+    "@react-three/drei": "^9.92.7",
+    "@react-three/fiber": "^8.15.12",
+    "leva": "^0.9.35",
+    "next": "14.0.4",
     "react": "^18",
-    "react-dom": "^18",
-    "three": "^0.162.0"
+    "react-dom": "^18"
   },
   "devDependencies": {
     "eslint": "^8",
-    "eslint-config-next": "14.1.0"
+    "eslint-config-next": "14.0.4"
   }
 }
