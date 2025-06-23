@@ -15,10 +15,37 @@ export default function About() {
                                 <img src="/medias/profile.jpg" alt="Profile" />
                             </div>
                             <h2>Hassan Ilyas Virk</h2>
+                            <a
+                              href="/medias/Resume.pdf"
+                              className="download-cv-btn"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Download Resume
+                              <span className="cv-arrow" aria-label="Download">
+                                <svg width="1em" height="1em" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{display:'inline',verticalAlign:'middle'}}>
+                                  <path d="M10 3V15M10 15L5 10M10 15L15 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </span>
+                            </a>
                         </div>  
                         <div className="about-widget bio-widget">
                             <h3>Software Engineer</h3>
                             <p>3D Visual Desginer</p>
+                        </div>
+                        <div className="about-widget employment-widget">
+                            <ul style={{listStyle: 'none', padding: 0, margin: 0}}>
+                                <li style={{marginBottom: '0.4rem'}}>
+                                    <strong>3D Modeler</strong>
+                                    <a href="https://phantom3dstudio.com/" target="_blank" rel="noopener noreferrer">Phantom 3D Studio</a>
+                                    <span>Mar 2024 - Present</span>
+                                </li>
+                                <li>
+                                    <strong>Game Asset Designer</strong>
+                                    <a href="https://annixia.com/" target="_blank" rel="noopener noreferrer">Annixia Studios</a>
+                                    <span>Apr 2024 - Feb 2024</span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
 

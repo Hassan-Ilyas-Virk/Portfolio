@@ -27,7 +27,7 @@
   z-index: 2;
 }
 .sectionContent h1 {
-  font-size: 1.8rem !important;
+  font-size: 2.5rem !important;
   font-family: 'Montserrat', sans-serif;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -37,17 +37,29 @@
   
 .projectsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
   width: 100%;
   margin-top: 2rem;
 }
 
+@media (max-width: 1000px) {
+  .projectsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .projectsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .projectCard {
-  background: linear-gradient(135deg, rgba(104, 104, 104, 0.04), rgba(22, 22, 22, 0.986));
+  background: linear-gradient(135deg, rgb(0, 0, 0), rgba(39, 39, 39, 0.26));
   border: 1px solid rgba(117, 117, 117, 0.349);
-  box-shadow: 0 0 10px 0 rgba(184, 184, 184, 0.151) inset;
-  border-radius: 2rem;
+  box-shadow: 0 0 20px 0 rgba(184, 184, 184, 0.158) inset;
+  border-radius: 3rem;
   padding: 2rem;
   color: #fff;
   transition: box-shadow 0.3s, border-radius 0.3s, background 0.3s;
@@ -57,9 +69,9 @@
 }
 
 .projectCard:hover {
-  box-shadow: 0 0 20px 0 rgba(184, 184, 184, 0.25) inset;
-  border-radius: 2.5rem;
-  background: linear-gradient(135deg, rgba(104, 104, 104, 0.08), rgba(22, 22, 22, 0.986));
+  box-shadow: 0 0 20px 0rgba(0, 0, 0, 0.445) inset;
+  border-radius: 2rem;
+
 }
 
 .projectCard h2 {
@@ -71,22 +83,22 @@
 .projectCard p {
   margin: 0;
   font-size: 1rem;
-  color: #ccc;
+  color: #ccccccb4;
 }
 
 .projectLink {
   display: inline-block;
   margin-top: 1.2rem;
   padding: 0.6rem 1.5rem;
-  background: linear-gradient(135deg, rgba(104, 104, 104, 0.14), rgba(22, 22, 22, 0.986));
+  background: linear-gradient(135deg, rgba(104, 104, 104, 0.377), rgba(22, 22, 22, 0.986));
   color: #fff;
-  border: 1px solid rgba(117, 117, 117, 0.349);
+  border: 1px solid rgb(117, 117, 117);
   border-radius: 1.2rem;
   font-family: 'Montserrat', sans-serif;
   font-size: 1rem;
   font-weight: 500;
   text-decoration: none;
-  transition: background 0.2s, color 0.2s, box-shadow 0.2s, border-radius 0.2s;
+  transition: background 0.5s, color 0.5s, box-shadow 1s, border-radius 1s;
   box-shadow: 0 0 6px 0 rgba(184, 184, 184, 0.08) inset;
 }
 
@@ -107,15 +119,14 @@
 .techBadge {
   background: rgba(255, 255, 255, 0);
   color: #fff;
-  border: 1px solid rgba(117,117,117,0.25);
+  border: 1px solid rgba(117, 117, 117, 0);
   border-radius: 1.2rem;
   padding: 0.3rem 1rem;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-family: 'Montserrat', sans-serif;
   font-weight: 300;
   letter-spacing: 0.01em;
   transition: background 0.2s, color 0.2s, border 0.2s;
-  box-shadow: 0 0 4px 0 rgba(184, 184, 184, 0.08) inset;
   user-select: none;
 }
 
@@ -128,7 +139,7 @@
   height: 0;
   border-radius: 50%;
   filter: blur(100px);
-  background: #7700ff;
+  background: #4c00ff;
   box-shadow: rgb(137, 255, 229) 55px 54px 55px;
   z-index: -1;
   transform: translate(-50%, -50%);

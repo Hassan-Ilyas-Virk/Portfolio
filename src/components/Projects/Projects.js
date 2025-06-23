@@ -4,28 +4,72 @@ import './projects.css';
 
 const projects = [
   {
-    title: '3D Distorted Glass Effect',
-    description: 'A visually stunning 3D glass distortion effect using Three.js and React Three Fiber.',
-    link: 'https://github.com/yourusername/3d-distorted-glass-effect',
-    technologies: ['Three.js', 'React Three Fiber', 'React', 'CSS']
+    title: 'Facial Expression Detector',
+    description: 'Real-time facial expression recognition using deep learning and computer vision.',
+    link: 'https://github.com/Hassan-Ilyas-Virk/facial-expression-dectector',
+    technologies: ['Python', 'TensorFlow', 'OpenCV']
   },
   {
-    title: 'Portfolio Website',
-    description: 'A modern, interactive portfolio to showcase my work and skills as a developer and designer.',
-    link: 'https://yourportfolio.com/',
-    technologies: ['Next.js', 'React', 'CSS Modules', 'Vercel']
+    title: 'Marketplace MERN',
+    description: 'A full-stack e-commerce app with user authentication and product listings.',
+    link: 'https://github.com/Hassan-Ilyas-Virk/marketplace-MERN',
+    technologies: ['MongoDB', 'React', 'Node.js']
   },
   {
-    title: 'Realtime Chat App',
-    description: 'A full-stack chat application with WebSocket support for real-time messaging.',
-    link: 'https://github.com/yourusername/realtime-chat-app',
-    technologies: ['Node.js', 'Express', 'Socket.io', 'React', 'MongoDB']
+    title: 'Weather App',
+    description: 'Weather dashboard with charts, tables, and chatbot integration.',
+    link: 'https://github.com/Hassan-Ilyas-Virk/Weather-App',
+    technologies: ['JavaScript', 'Chart.js', 'Gemini Chatbot']
   },
+  {
+    title: 'Stylized Airships Game Assets',
+    description: "Stylized airship assets for Annxia Studio's game project.",
+    link: 'https://hassan_ilyas.artstation.com/projects/WXVl5v',
+    technologies: ['Blender', 'Game Asset Design' ,'Unity' ]
+  },
+  {
+    title: 'Kaneki vs Jason 3D Render',
+    description: 'Cinematic 3D render of Kaneki vs Jason from Tokyo Ghoul.',
+    link: 'https://hassan_ilyas.artstation.com/projects/98ZNkL',
+    technologies: ['Blender', 'ZBrush', 'After Effects']
+  },
+ 
+  
   // Add more projects as needed
 ];
 
 const MIN_SIZE = 8;
 const MAX_SIZE = 300;
+
+// Utility to generate a dark color from a string
+function stringToDarkColor(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsla(${h}, 60%, 18%, 0.1)`;
+}
+
+// Utility to generate a bright font color from a string (same hue, high lightness)
+function stringToBrightColor(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return `hsl(${h}, 40%, 70%)`;
+}
+
+// Utility to generate a glow color for box-shadow
+function stringToGlow(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h = Math.abs(hash) % 360;
+  return `0 0 12px 2px hsla(${h}, 70%, 50%, 0.2)`;
+}
 
 export default function Projects() {
   const [cursor, setCursor] = useState({ x: 0, y: 0, hovering: false, size: MIN_SIZE });
@@ -81,7 +125,17 @@ export default function Projects() {
               <p>{project.description}</p>
               <div className="techList">
                 {project.technologies.map((tech, tIdx) => (
-                  <span className="techBadge" key={tIdx}>{tech}</span>
+                  <span
+                    className="techBadge"
+                    key={tIdx}
+                    style={{
+                      background: stringToDarkColor(tech),
+                      color: stringToBrightColor(tech),
+                      boxShadow: stringToGlow(tech)
+                    }}
+                  >
+                    {tech}
+                  </span>
                 ))}
               </div>
               <a href={project.link} target="_blank" rel="noopener noreferrer" className="projectLink">
