@@ -2,4 +2,21 @@
     display: flex;
     height: 100vh;
     background-color: black;
+    position: relative;
+    overflow: visible;
+}
+
+.top-right-name {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    color: white;
+    font-family: 'PPNeueMontreal-Bold', sans-serif;
+    font-size: 3rem;
+    letter-spacing: 0.05em;
+    margin: 0;
+    pointer-events: none;
+    user-select: none;
 }

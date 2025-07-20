@@ -73,6 +73,7 @@ function stringToGlow(str) {
 
 export default function Projects() {
   const [cursor, setCursor] = useState({ x: 0, y: 0, hovering: false, size: MIN_SIZE });
+  const [expandedProjects, setExpandedProjects] = useState(new Set());
   const prev = useRef({ x: 0, y: 0, t: 0 });
 
   const handleMouseMove = (e) => {
@@ -99,6 +100,18 @@ export default function Projects() {
     prev.current = { x: 0, y: 0, t: 0 };
   };
 
+  const toggleProject = (idx) => {
+    setExpandedProjects(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(idx)) {
+        newSet.delete(idx);
+      } else {
+        newSet.add(idx);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <section id="projects" className="projectsSection">
       <div
@@ -120,32 +133,56 @@ export default function Projects() {
         <h1>Projects</h1>
         <div className="projectsGrid">
           {projects.map((project, idx) => (
-            <div className="projectCard" key={idx}>
-              <h2>{project.title}</h2>
-              <p>{project.description}</p>
-              <div className="techList">
-                {project.technologies.map((tech, tIdx) => (
-                  <span
-                    className="techBadge"
-                    key={tIdx}
-                    style={{
-                      background: stringToDarkColor(tech),
-                      color: stringToBrightColor(tech),
-                      boxShadow: stringToGlow(tech)
-                    }}
+            <div className={`projectCard ${expandedProjects.has(idx) ? 'expanded' : ''}`} key={idx}>
+              <div className="projectHeader" onClick={() => toggleProject(idx)}>
+                <h2>{project.title}</h2>
+                <button 
+                  className="dropdownToggle" 
+                  aria-label="Toggle project details"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleProject(idx);
+                  }}
+                >
+                  <svg 
+                    width="24" 
+                    height="24" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                    className={expandedProjects.has(idx) ? 'rotated' : ''}
                   >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-              <a href={project.link} target="_blank" rel="noopener noreferrer" className="projectLink">
-                Visit Project{' '}
-                <span aria-label="External Link" style={{ verticalAlign: 'middle', display: 'inline-block', marginLeft: 6 }}>
-                  <svg width="1em" height="1em" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{display:'inline',verticalAlign:'middle'}}>
-                    <path d="M7 13L13 7M13 7H8M13 7V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6 9l6 6 6-6"/>
                   </svg>
-                </span>
-              </a>
+                </button>
+              </div>
+              <div className="projectContent">
+                <p>{project.description}</p>
+                <div className="techList">
+                  {project.technologies.map((tech, tIdx) => (
+                    <span
+                      className="techBadge"
+                      key={tIdx}
+                      style={{
+                        background: stringToDarkColor(tech),
+                        color: stringToBrightColor(tech),
+                        boxShadow: stringToGlow(tech)
+                      }}
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+                <a href={project.link} target="_blank" rel="noopener noreferrer" className="projectLink">
+                  Visit Project{' '}
+                  <span aria-label="External Link" style={{ verticalAlign: 'middle', display: 'inline-block', marginLeft: 6 }}>
+                    <svg width="1em" height="1em" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{display:'inline',verticalAlign:'middle'}}>
+                      <path d="M7 13L13 7M13 7H8M13 7V12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
+                </a>
+              </div>
             </div>
           ))}
         </div>

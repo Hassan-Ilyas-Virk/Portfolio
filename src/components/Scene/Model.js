@@ -8,19 +8,6 @@ export default function Model() {
     const { viewport } = useThree()
     const torus = useRef(null);
     const textRef = useRef(null);
-    // Rainbow colors for the trail
-    const colors = [
-        '#FF0000', // Red
-        '#FF7F00', // Orange
-        '#FFFF00', // Yellow
-        '#00FF00', // Green
-        '#0000FF', // Blue
-        '#4B0082', // Indigo
-
-    ];
-    const trailLength = colors.length;
-    // Buffer for previous mouse positions
-    const [trailPositions, setTrailPositions] = useState(Array(trailLength).fill({ x: 0, y: 0 }));
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
     useEffect(() => {
@@ -35,11 +22,6 @@ export default function Model() {
 
     useFrame(() => {
         torus.current.rotation.x -= 0.005;
-        // Update trail buffer: add new position to front, remove last
-        setTrailPositions(prev => [{
-            x: mousePosition.x * 0.2,
-            y: mousePosition.y * 0.2
-        }, ...prev.slice(0, trailLength - 1)]);
         // Move main text
         if (textRef.current) {
             textRef.current.position.x = mousePosition.x * 0.2;
@@ -57,18 +39,18 @@ export default function Model() {
     })
 
     return (
-        <group scale={viewport.width / 3.75} >
+        <group scale={viewport.width / 3.75}>
             <Text
                 ref={textRef}
                 font={'/fonts/Compacta Italic.otf'}
                 position={[mousePosition.x * 0.2, mousePosition.y * 0.2, -1]}
-                fontSize={2}
+                fontSize={1.5}
                 color="white"
                 anchorX="center"
                 anchorY="middle"
                 rotation={[0, 0, Math.PI / 12]}
             >
-                FLEXIBLE
+                HASSAN ILYAS
             </Text>
             <mesh ref={torus} {...nodes.Torus002}>
                 <MeshTransmissionMaterial {...materialProps}/>

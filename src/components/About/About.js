@@ -85,10 +85,7 @@ export default function About() {
                                             <i className="fas fa-database"></i>
                                             <span>SQL</span>
                                         </li>
-                                        <li>
-                                            <i className="devicon-swift-plain"></i>
-                                            <span>Swift</span>
-                                        </li>
+                                    
                                     </ul>
                                 </div>
                                 <div className="skill-category">
