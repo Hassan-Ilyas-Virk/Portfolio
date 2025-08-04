@@ -12,33 +12,54 @@ export default function Navbar() {
       }
     };
 
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    if (menuOpen) {
+      document.addEventListener('click', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, [menuOpen]);
 
-  // Close menu on escape key
+  // Handle keyboard navigation
   useEffect(() => {
-    const handleEscape = (event) => {
-      if (event.key === 'Escape') {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && menuOpen) {
         setMenuOpen(false);
+      }
+      
+      // Enter or Space to toggle menu when button is focused
+      if ((event.key === 'Enter' || event.key === ' ') && 
+          event.target.classList.contains('hamburger-btn')) {
+        event.preventDefault();
+        setMenuOpen(prev => !prev);
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [menuOpen]);
 
   return (
-    <nav className="main-navbar">
+    <nav className={`main-navbar ${menuOpen ? 'menu-is-open' : 'menu-is-closed'}`}>
       <button
         className="hamburger-btn"
-        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+        aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={menuOpen}
         aria-controls="main-navbar-list"
+        aria-haspopup="true"
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
           setMenuOpen((open) => !open);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setMenuOpen((open) => !open);
+          }
         }}
         type="button"
       >
@@ -46,11 +67,68 @@ export default function Navbar() {
         <span className={`hamburger-line ${menuOpen ? 'open' : ''}`}></span>
         <span className={`hamburger-line ${menuOpen ? 'open' : ''}`}></span>
       </button>
-      <ul id="main-navbar-list" className={menuOpen ? 'open' : ''}>
-        <li><a href="#home" onClick={() => setMenuOpen(false)}>Home</a></li>
-        <li><a href="#about" onClick={() => setMenuOpen(false)}>About</a></li>
-        <li><a href="#projects" onClick={() => setMenuOpen(false)}>Projects</a></li>
-        <li><a href="#contact" onClick={() => setMenuOpen(false)}>Contact</a></li>
+      <ul 
+        id="main-navbar-list" 
+        className={menuOpen ? 'open' : ''}
+        role="menu"
+        aria-hidden={!menuOpen}
+      >
+        <li role="none">
+          <a 
+            href="#home" 
+            role="menuitem"
+            onClick={(e) => {
+              setMenuOpen(false);
+              // Smooth scroll to top
+              e.preventDefault();
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            Home
+          </a>
+        </li>
+        <li role="none">
+          <a 
+            href="#about" 
+            role="menuitem"
+            onClick={(e) => {
+              setMenuOpen(false);
+              // Smooth scroll to section
+              e.preventDefault();
+              document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            About
+          </a>
+        </li>
+        <li role="none">
+          <a 
+            href="#projects" 
+            role="menuitem"
+            onClick={(e) => {
+              setMenuOpen(false);
+              // Smooth scroll to section
+              e.preventDefault();
+              document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            Projects
+          </a>
+        </li>
+        <li role="none">
+          <a 
+            href="#contact" 
+            role="menuitem"
+            onClick={(e) => {
+              setMenuOpen(false);
+              // Smooth scroll to section
+              e.preventDefault();
+              document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          >
+            Contact
+          </a>
+        </li>
       </ul>
     </nav>
   );
