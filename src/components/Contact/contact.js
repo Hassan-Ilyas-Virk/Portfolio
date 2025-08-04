@@ -62,12 +62,13 @@ export default function Contact() {
   };
 
   return (
-    <section id="contact" className="contactSection">
+    <section id="contact" className="contactSection" suppressHydrationWarning={true}>
       <div
         className="contactColumns"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ position: 'relative', overflow: 'hidden' }}
+        suppressHydrationWarning={true}
       >
         <div
           className="purpleCursor"

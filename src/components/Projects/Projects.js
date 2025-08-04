@@ -113,12 +113,13 @@ export default function Projects() {
   };
 
   return (
-    <section id="projects" className="projectsSection">
+    <section id="projects" className="projectsSection" suppressHydrationWarning={true}>
       <div
         className="sectionContent"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ position: 'relative', overflow: 'hidden' }}
+        suppressHydrationWarning={true}
       >
         <div
           className="purpleCursor"

@@ -15,16 +15,20 @@ const getRandomInRange = (min, max) => {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-// Generate 14 rows with random configurations
-const rowConfigs = Array.from({ length: 14 }, (_, i) => ({
-    speed: getRandomInRange(40, 140),
-    size: getRandomInRange(30, 40),
-    opacity: (getRandomInRange(20, 40) / 100).toFixed(2),
-    phrase: phrases[i % phrases.length]
-}));
-
 const InfiniteText = () => {
     const [parallax, setParallax] = useState(0);
+    const [rowConfigs, setRowConfigs] = useState([]);
+
+    // Generate row configurations after mount to avoid hydration mismatch
+    useEffect(() => {
+        const configs = Array.from({ length: 14 }, (_, i) => ({
+            speed: getRandomInRange(40, 140),
+            size: getRandomInRange(30, 40),
+            opacity: (getRandomInRange(20, 40) / 100).toFixed(2),
+            phrase: phrases[i % phrases.length]
+        }));
+        setRowConfigs(configs);
+    }, []);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -37,6 +41,7 @@ const InfiniteText = () => {
     return (
         <div
             className="compacta-italic"
+            suppressHydrationWarning={true}
             style={{
                 position: 'fixed',
                 top: '-20%',
@@ -51,7 +56,7 @@ const InfiniteText = () => {
                 transition: 'transform 0.2s cubic-bezier(.4,0,.2,1)'
             }}
         >
-            {rowConfigs.map((config, rowIndex) => (
+            {rowConfigs.length > 0 && rowConfigs.map((config, rowIndex) => (
                 <div
                     key={rowIndex}
                     className="infinite-text"

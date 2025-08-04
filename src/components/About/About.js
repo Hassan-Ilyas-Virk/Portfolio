@@ -2,8 +2,8 @@ import './about.css'
 
 export default function About() {
     return (
-        <section id="about" className="fullpage-section about-section">
-            <div className="section-content">
+        <section id="about" className="fullpage-section about-section" suppressHydrationWarning={true}>
+            <div className="section-content" suppressHydrationWarning={true}>
                 <div className="about-grid">
                     {/* Left Column - Profile and Bio */}
                     <div className="left-column">

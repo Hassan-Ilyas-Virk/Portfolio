@@ -12,7 +12,7 @@ const Scene = dynamic(() => import('@/components/Scene'), {
 export default function Page() {
     return (
         <>
-            <main className={styles.main}>
+            <main className={styles.main} suppressHydrationWarning={true}>
                 <Scene />
                 <InfiniteText />
             </main>

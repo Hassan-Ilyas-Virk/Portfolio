@@ -5,7 +5,13 @@ import { Environment } from '@react-three/drei'
 
 export default function Index() {
   return (
-    <Canvas style={{background: '#000000'}}>
+    <Canvas 
+        style={{background: '#000000'}}
+        camera={{ 
+            fov: 2, 
+            position: [0, 0, 5] 
+        }}
+    >
         <Model />
         <directionalLight intensity={2} position={[0, 2, 3]}/>
         <Environment preset="city" />
