@@ -1,0 +1,28 @@
+{
+  "name": "3d-glass-effect",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.92.7",
+    "@react-three/fiber": "^8.15.12",
+    "gsap": "^3.13.0",
+    "leva": "^0.9.35",
+    "motion": "^12.42.0",
+    "next": "14.0.4",
+    "ogl": "^1.0.11",
+    "postprocessing": "^6.37.8",
+    "react": "^18",
+    "react-dom": "^18",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4"
+  }
+}

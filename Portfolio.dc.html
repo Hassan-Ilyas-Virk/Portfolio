@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Archivo+Black&family=Space+Mono:wght@400;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e9e9e7; --bg2:#f4f4f2; --ink:#0c0c0d; --mute:#9b9b97;
+    --line:rgba(12,12,13,.13); --accent:#ff1e8c; --ghost:rgba(12,12,13,.05);
+    --wash:rgba(233,233,231,.6);
+    --panel:rgba(255,255,255,.46);
+    --irid:linear-gradient(115deg,#9fe7ff 0%,#ffc3ec 26%,#c9b8ff 50%,#b6ffe4 73%,#ffe7bd 100%);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:'Archivo',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  @media (hover:hover) and (pointer:fine){ body{cursor:none} body a,body button{cursor:none} }
+  ::selection{background:var(--accent);color:#fff}
+  a{color:inherit;text-decoration:none}
+  @keyframes mqL{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+  @keyframes mqR{0%{transform:translateX(-50%)}100%{transform:translateX(0)}}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.72)}}
+  @keyframes spinSlow{to{transform:rotate(360deg)}}
+  @keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+  @keyframes hintMove{0%,100%{transform:translateY(0);opacity:.35}50%{transform:translateY(7px);opacity:1}}
+  @keyframes irMove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+  @media (max-width:880px){
+    [data-bento]{grid-template-columns:repeat(2,1fr)!important}
+    [data-bento]>*{grid-column:span 2!important;grid-row:auto!important}
+    [data-navlinks]{display:none!important}
+    [data-2col]{grid-template-columns:1fr!important}
+    [data-tl-row]{grid-template-columns:1fr!important;gap:6px!important}
+  }
+</style>
+<script type="importmap">{ "imports": { "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+<script type="module">
+  import * as THREE from 'three';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+  window.THREE = THREE;
+  window.THREE_ADDONS = { GLTFLoader, RoomEnvironment };
+  window.__THREE_READY = true;
+  window.dispatchEvent(new Event('three-ready'));
+</script>
+</helmet>
+
+<div ref="{{ rootRef }}" style="position:relative;min-height:100vh;overflow:hidden">
+
+  <svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true"><defs>
+    <filter id="glassWarp" x="-15%" y="-15%" width="130%" height="130%"><feTurbulence type="fractalNoise" baseFrequency="0.009 0.016" numOctaves="2" seed="8" result="n"/><feGaussianBlur in="n" stdDeviation="0.7" result="nb"/><feDisplacementMap in="SourceGraphic" in2="nb" scale="22" xChannelSelector="R" yChannelSelector="G"/></filter>
+  </defs></svg>
+
+  <canvas ref="{{ canvasRef }}" aria-hidden="true" style="position:fixed;inset:0;width:100vw;height:100vh;z-index:1;pointer-events:none"></canvas>
+  <div ref="{{ grainRef }}" aria-hidden="true" style="position:fixed;inset:0;z-index:9996;pointer-events:none;opacity:.42;mix-blend-mode:soft-light"></div>
+  <div aria-hidden="true" style="position:fixed;inset:0;z-index:9995;pointer-events:none;background:radial-gradient(120% 120% at 50% 40%, transparent 56%, rgba(0,0,0,.16) 100%)"></div>
+  <div ref="{{ progressRef }}" aria-hidden="true" style="position:fixed;top:0;left:0;height:2px;width:0;z-index:9990;background:var(--irid);background-size:220% 100%;animation:shimmer 3s linear infinite"></div>
+
+  <div ref="{{ cursorRef }}" aria-hidden="true" style="position:fixed;left:0;top:0;z-index:10000;width:42px;height:42px;margin:-21px 0 0 -21px;border:1px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;mix-blend-mode:difference;transition:width .26s cubic-bezier(.2,.7,0,1),height .26s cubic-bezier(.2,.7,0,1),margin .26s cubic-bezier(.2,.7,0,1),background .26s;will-change:transform"><span ref="{{ cursorLabelRef }}" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.06em;color:#fff;opacity:0;white-space:nowrap"></span></div>
+  <div ref="{{ cursorDotRef }}" aria-hidden="true" style="position:fixed;left:0;top:0;z-index:10001;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;background:var(--ink);border-radius:50%;pointer-events:none;mix-blend-mode:difference;will-change:transform"></div>
+
+  <nav style="position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:13px clamp(16px,4vw,48px);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);border-bottom:1px solid var(--line)">
+    <a href="#top" data-interactive data-cursor="link" data-target="top" onClick="{{ onNav }}" style="display:flex;align-items:center;gap:11px">
+      <img src="assets/logo.png" alt="Hassan Ilyas logo" style="width:30px;height:30px;object-fit:contain;display:block"/>
+      <span style="display:flex;flex-direction:column;line-height:1.05">
+        <span style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.12em;font-weight:700">HASSAN ILYAS</span>
+        <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.22em;color:var(--mute)">CREATIVE DEVELOPER</span>
+      </span>
+    </a>
+    <div data-navlinks style="display:flex;align-items:center;gap:26px;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.12em">
+      <sc-for list="{{ navLinks }}" as="link" hint-placeholder-count="5">
+        <a href="#" data-interactive data-cursor="link" data-target="{{ link.id }}" onClick="{{ onNav }}" style="position:relative;padding:4px 0;color:var(--ink);opacity:.7;transition:opacity .2s" style-hover="opacity:1">{{ link.label }}</a>
+      </sc-for>
+    </div>
+    <button data-interactive data-cursor="link" onClick="{{ toggleSound }}" style="background:transparent;border:1px solid var(--line);border-radius:100px;padding:7px 14px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--ink);display:flex;align-items:center;gap:7px" style-hover="border-color:var(--ink)"><span style="width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block"></span>{{ soundLabel }}</button>
+  </nav>
+
+  <a id="top"></a>
+  <header data-screen-label="Hero" style="position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(94px,13vh,140px) clamp(16px,4vw,52px) clamp(30px,5vh,64px)">
+    <div aria-hidden="true" style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
+      <div style="position:absolute;top:13%;left:0;white-space:nowrap;font-family:'Archivo Black',sans-serif;font-size:13vw;line-height:1;color:var(--ghost);animation:mqL 42s linear infinite">CREATIVE DEVELOPER&nbsp;·&nbsp;CREATIVE DEVELOPER&nbsp;·&nbsp;CREATIVE DEVELOPER&nbsp;·&nbsp;CREATIVE DEVELOPER&nbsp;·&nbsp;CREATIVE DEVELOPER&nbsp;·&nbsp;CREATIVE DEVELOPER&nbsp;·&nbsp;</div>
+      <div style="position:absolute;top:46%;left:0;white-space:nowrap;font-family:'Archivo Black',sans-serif;font-size:13vw;line-height:1;color:var(--ghost);animation:mqR 52s linear infinite">THREE.JS&nbsp;/&nbsp;WEBGL&nbsp;/&nbsp;GLSL&nbsp;·&nbsp;THREE.JS&nbsp;/&nbsp;WEBGL&nbsp;/&nbsp;GLSL&nbsp;·&nbsp;THREE.JS&nbsp;/&nbsp;WEBGL&nbsp;/&nbsp;GLSL&nbsp;·&nbsp;THREE.JS&nbsp;/&nbsp;WEBGL&nbsp;/&nbsp;GLSL&nbsp;·&nbsp;</div>
+      <div style="position:absolute;top:78%;left:0;white-space:nowrap;font-family:'Archivo Black',sans-serif;font-size:13vw;line-height:1;color:var(--ghost);animation:mqL 60s linear infinite">INTERACTIVE&nbsp;·&nbsp;IMMERSIVE&nbsp;·&nbsp;EXPRESSIVE&nbsp;·&nbsp;INTERACTIVE&nbsp;·&nbsp;IMMERSIVE&nbsp;·&nbsp;EXPRESSIVE&nbsp;·&nbsp;INTERACTIVE&nbsp;·&nbsp;IMMERSIVE&nbsp;·&nbsp;EXPRESSIVE&nbsp;·&nbsp;</div>
+    </div>
+
+    <div style="position:relative;z-index:3;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--mute)">
+      <div>PORTFOLIO — VOL.01<br><span style="color:var(--ink)">[ DRAG THE OBJECT ]</span></div>
+      <div style="text-align:right">INTERACTIVE 3D / WEBGL<br>EST. 2026 — ✶</div>
+    </div>
+
+    <div style="position:relative">
+      <div style="position:absolute;left:clamp(2px,2vw,40px);top:-7%;z-index:3;font-family:'Caveat',cursive;font-weight:700;font-size:clamp(40px,7vw,104px);color:var(--accent);transform:rotate(-7deg);line-height:.8">creative</div>
+      <div data-hero-title style="font-family:'Archivo Black',sans-serif;font-weight:900;font-size:clamp(70px,19.5vw,318px);line-height:.78;letter-spacing:-.035em;color:var(--ink)">HASSAN</div>
+      <div data-hero-title style="font-family:'Archivo Black',sans-serif;font-weight:900;font-size:clamp(70px,19.5vw,318px);line-height:.78;letter-spacing:-.035em;color:transparent;-webkit-text-stroke:clamp(1px,.2vw,2.6px) var(--ink);margin-top:-.02em">ILYAS</div>
+    </div>
+
+    <div style="position:relative;z-index:3;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap">
+      <div style="max-width:430px">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--mute);margin-bottom:9px">CREATIVE DEVELOPER · 3D ON THE WEB</div>
+        <div style="font-size:clamp(15px,1.4vw,19px);font-weight:500;line-height:1.45;max-width:40ch">I design and engineer immersive, expressive web experiences — where interaction, motion and real-time 3D do the talking.</div>
+      </div>
+      <div data-interactive data-cursor="drag" onClick="{{ scrollNext }}" style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--ink);display:flex;align-items:center;gap:10px">SCROLL<span style="display:inline-block;animation:hintMove 1.6s ease-in-out infinite">↓</span></div>
+    </div>
+  </header>
+
+  <section id="about" data-screen-label="About" style="position:relative;z-index:2;padding:clamp(70px,12vh,150px) clamp(16px,4vw,52px);background:var(--wash);backdrop-filter:blur(9px) saturate(125%);-webkit-backdrop-filter:blur(9px) saturate(125%);border-top:1px solid var(--line)">
+    <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:clamp(28px,5vh,56px);flex-wrap:wrap">
+      <span style="font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.2em;color:var(--accent)">(01)</span>
+      <h2 data-reveal style="margin:0;font-family:'Archivo Black',sans-serif;font-size:clamp(40px,7vw,108px);line-height:.86;letter-spacing:-.03em">ABOUT</h2>
+      <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--mute);margin-left:auto">WHO / WHERE / WHAT NOW</span>
+    </div>
+
+    <div data-bento style="display:grid;grid-template-columns:repeat(12,1fr);gap:14px;grid-auto-flow:dense">
+      <div data-reveal data-tilt data-interactive style="grid-column:span 6;grid-row:span 2;min-height:300px;padding:clamp(22px,2.4vw,38px);display:flex;flex-direction:column;justify-content:space-between;background:var(--panel);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--line);border-radius:22px;box-shadow:0 1px 0 rgba(255,255,255,.55) inset,0 24px 60px -40px rgba(0,0,0,.5);will-change:transform">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--mute)">// PROFILE</div>
+        <div>
+          <div style="font-size:clamp(22px,2.6vw,36px);font-weight:800;line-height:1.12;letter-spacing:-.01em;margin-bottom:14px;text-wrap:balance">Hi — I'm Hassan, a creative developer who builds the kind of web that makes people lean in.</div>
+          <div style="font-size:clamp(14px,1.2vw,16px);line-height:1.55;color:var(--ink);opacity:.78;max-width:52ch">Five-plus years turning ideas into tactile, real-time experiences. I live in the seam between design and engineering: shaders, motion, 3D, and the obsessive details that make an interface feel alive.</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em">
+          <span style="padding:6px 11px;border:1px solid var(--line);border-radius:100px">THREE.JS</span>
+          <span style="padding:6px 11px;border:1px solid var(--line);border-radius:100px">GLSL</span>
+          <span style="padding:6px 11px;border:1px solid var(--line);border-radius:100px">REACT</span>
+          <span style="padding:6px 11px;border:1px solid var(--line);border-radius:100px">MOTION</span>
+        </div>
+      </div>
+
+      <div data-reveal data-tilt data-interactive style="grid-column:span 3;min-height:142px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;background:var(--panel);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--line);border-radius:22px;will-change:transform">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--mute)">LOCAL TIME</div>
+        <div data-clock style="font-family:'Space Mono',monospace;font-size:clamp(26px,2.6vw,40px);font-weight:700;letter-spacing:.02em">--:--:--</div>
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.12em;color:var(--ink)">GMT+5 · LAHORE, PK</div>
+      </div>
+
+      <div data-reveal data-tilt data-interactive style="grid-column:span 3;min-height:142px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;background:var(--panel);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--line);border-radius:22px;will-change:transform">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--mute)">STATUS</div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="width:11px;height:11px;border-radius:50%;background:#16c172;box-shadow:0 0 0 4px rgba(22,193,114,.18);animation:pulse 1.8s ease-in-out infinite"></span><span style="font-size:clamp(17px,1.8vw,23px);font-weight:800">Available</span></div>
+        <div style="font-size:13px;line-height:1.4;opacity:.74">Open to freelance &amp; collaborations for 2026.</div>
+      </div>
+
+      <div data-reveal data-tilt data-interactive style="grid-column:span 3;min-height:142px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;background:var(--panel);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--line);border-radius:22px;will-change:transform">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--mute)">CURRENTLY</div>
+        <div style="font-size:clamp(15px,1.5vw,19px);font-weight:700;line-height:1.2">Shipping WebGPU experiments &amp; a shader playground.</div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--accent)">● LEARNING IN PUBLIC</div>
+      </div>
+
+      <div data-reveal data-tilt data-interactive style="grid-column:span 3;min-height:142px;padding:22px;display:flex;justify-content:space-between;background:var(--panel);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--line);border-radius:22px;will-change:transform">
+        <div style="display:flex;flex-direction:column;justify-content:space-between"><span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--mute)">YEARS</span><span style="font-family:'Archivo Black';font-size:clamp(34px,3.6vw,56px);line-height:.9">05+</span></div>
+        <div style="display:flex;flex-direction:column;justify-content:space-between;text-align:right"><span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--mute)">SHIPPED</span><span style="font-family:'Archivo Black';font-size:clamp(34px,3.6vw,56px);line-height:.9">40+</span></div>
+      </div>
+
+      <div data-reveal data-interactive style="grid-column:span 6;min-height:160px;padding:22px;position:relative;overflow:hidden;background:var(--panel);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--line);border-radius:22px">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--mute)">PLAYGROUND · DRAG ME</div>
+        <div style="position:absolute;inset:0;pointer-events:none">
+          <div data-drag data-interactive data-cursor="drag" style="position:absolute;left:28%;top:46%;pointer-events:auto;width:78px;height:78px;border-radius:18px;background:var(--irid);background-size:200% 200%;animation:irMove 6s ease infinite;box-shadow:0 14px 30px -16px rgba(0,0,0,.5);will-change:transform"></div>
+          <div data-drag data-interactive data-cursor="drag" style="position:absolute;left:55%;top:30%;pointer-events:auto;width:64px;height:64px;border-radius:50%;background:var(--ink);will-change:transform;display:flex;align-items:center;justify-content:center;color:var(--bg);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.1em">PULL</div>
+          <div data-drag data-interactive data-cursor="drag" style="position:absolute;left:74%;top:54%;pointer-events:auto;width:88px;height:34px;border-radius:100px;border:2px solid var(--ink);will-change:transform;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.14em">FLING →</div>
+        </div>
+        <div style="position:absolute;bottom:18px;left:22px;font-size:13px;opacity:.6;max-width:40ch">Throw them around. Everything here responds to you.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="skills" data-screen-label="Skills" style="position:relative;z-index:2;padding:clamp(70px,12vh,150px) clamp(16px,4vw,52px);background:var(--wash);backdrop-filter:blur(9px) saturate(125%);-webkit-backdrop-filter:blur(9px) saturate(125%);border-top:1px solid var(--line)">
+    <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:clamp(28px,5vh,56px);flex-wrap:wrap">
+      <span style="font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.2em;color:var(--accent)">(02)</span>
+      <h2 data-reveal style="margin:0;font-family:'Archivo Black',sans-serif;font-size:clamp(40px,7vw,108px);line-height:.86;letter-spacing:-.03em">SKILLS</h2>
+      <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--mute);margin-left:auto">THE TOOLKIT — HOVER TO FOCUS</span>
+    </div>
+
+    <div data-bento style="display:grid;grid-template-columns:repeat(12,1fr);gap:14px">
+      <sc-for list="{{ skills }}" as="grp" hint-placeholder-count="4">
+        <div data-reveal data-skillcard data-interactive style="grid-column:span 3;min-height:230px;padding:22px;display:flex;flex-direction:column;background:var(--panel);backdrop-filter:blur(18px) saturate(155%);-webkit-backdrop-filter:blur(18px) saturate(155%);border:1px solid var(--line);border-radius:22px;transition:transform .35s cubic-bezier(.2,.7,0,1),box-shadow .35s,border-color .35s;will-change:transform" style-hover="transform:translateY(-8px);box-shadow:0 30px 60px -40px rgba(0,0,0,.6);border-color:var(--ink)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px"><span style="font-family:'Archivo Black';font-size:clamp(18px,1.8vw,24px)">{{ grp.label }}</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--mute)">0{{ grp.n }}</span></div>
+          <div style="display:flex;flex-direction:column;gap:9px">
+            <sc-for list="{{ grp.items }}" as="t" hint-placeholder-count="5">
+              <div data-skill data-interactive data-cursor="link" style="display:flex;align-items:center;gap:9px;font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.04em;opacity:.82;transition:opacity .2s,transform .2s" style-hover="opacity:1;transform:translateX(5px)"><span style="width:5px;height:5px;border-radius:50%;background:var(--accent)"></span>{{ t }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div data-reveal aria-hidden="true" style="margin-top:14px;overflow:hidden;border:1px solid var(--line);border-radius:100px;padding:13px 0;background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)">
+      <div style="white-space:nowrap;font-family:'Archivo Black';font-size:22px;letter-spacing:.02em;color:var(--ink);opacity:.85;animation:mqL 26s linear infinite">SHADERS&nbsp;✶&nbsp;INTERACTION DESIGN&nbsp;✶&nbsp;REAL-TIME 3D&nbsp;✶&nbsp;MICRO-ANIMATION&nbsp;✶&nbsp;PERFORMANCE&nbsp;✶&nbsp;CREATIVE CODING&nbsp;✶&nbsp;SHADERS&nbsp;✶&nbsp;INTERACTION DESIGN&nbsp;✶&nbsp;REAL-TIME 3D&nbsp;✶&nbsp;MICRO-ANIMATION&nbsp;✶&nbsp;PERFORMANCE&nbsp;✶&nbsp;CREATIVE CODING&nbsp;✶&nbsp;</div>
+    </div>
+  </section>
+
+  <section id="experience" data-screen-label="Experience" style="position:relative;z-index:2;padding:clamp(70px,12vh,150px) clamp(16px,4vw,52px);background:var(--wash);backdrop-filter:blur(9px) saturate(125%);-webkit-backdrop-filter:blur(9px) saturate(125%);border-top:1px solid var(--line)">
+    <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:clamp(28px,5vh,56px);flex-wrap:wrap">
+      <span style="font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.2em;color:var(--accent)">(03)</span>
+      <h2 data-reveal style="margin:0;font-family:'Archivo Black',sans-serif;font-size:clamp(40px,7vw,108px);line-height:.86;letter-spacing:-.03em">JOURNEY</h2>
+      <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--mute);margin-left:auto">SELECTED EXPERIENCE</span>
+    </div>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ timeline }}" as="job" hint-placeholder-count="4">
+        <div data-reveal data-tl data-interactive data-tl-row style="display:grid;grid-template-columns:200px 1fr auto;gap:24px;align-items:start;padding:clamp(20px,3vh,36px) 0;border-top:1px solid var(--line);transition:padding-left .35s cubic-bezier(.2,.7,0,1)" style-hover="padding-left:18px">
+          <div style="font-family:'Space Mono',monospace;font-size:14px;letter-spacing:.1em;color:var(--accent);padding-top:6px">{{ job.year }}</div>
+          <div><div style="font-family:'Archivo Black';font-size:clamp(24px,3.2vw,46px);line-height:.96;letter-spacing:-.02em;margin-bottom:8px">{{ job.role }}</div><div style="font-size:15px;line-height:1.5;opacity:.74;max-width:60ch">{{ job.note }}</div></div>
+          <div style="font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.1em;color:var(--ink);text-align:right;padding-top:8px;white-space:nowrap">{{ job.org }}</div>
+        </div>
+      </sc-for>
+      <div style="border-top:1px solid var(--line)"></div>
+    </div>
+  </section>
+
+  <section id="playground" data-screen-label="Playground" style="position:relative;z-index:2;padding:clamp(70px,12vh,150px) clamp(16px,4vw,52px);background:var(--wash);backdrop-filter:blur(9px) saturate(125%);-webkit-backdrop-filter:blur(9px) saturate(125%);border-top:1px solid var(--line)">
+    <div style="display:flex;align-items:baseline;gap:18px;margin-bottom:clamp(28px,5vh,56px);flex-wrap:wrap">
+      <span style="font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.2em;color:var(--accent)">(04)</span>
+      <h2 data-reveal style="margin:0;font-family:'Archivo Black',sans-serif;font-size:clamp(40px,7vw,108px);line-height:.86;letter-spacing:-.03em;background:var(--irid);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 6s linear infinite">PLAYGROUND</h2>
+      <span style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--mute);margin-left:auto">EXPERIMENTS &amp; TOYS</span>
+    </div>
+    <div data-2col style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div data-reveal data-tilt data-interactive data-cursor="view" style="position:relative;overflow:hidden;border:1px solid var(--line);border-radius:22px;background:var(--panel);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);will-change:transform">
+        <canvas data-particles style="display:block;width:100%;height:clamp(170px,22vh,230px)"></canvas>
+        <div style="padding:18px 22px 22px"><div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--accent);margin-bottom:7px">WEBGL · LIVE</div><div style="font-family:'Archivo Black';font-size:clamp(20px,2vw,28px);margin-bottom:6px">Particle Field</div><div style="font-size:14px;opacity:.72;line-height:1.5">Connected points that flock toward your cursor. Move over it.</div></div>
+      </div>
+      <sc-for list="{{ experiments }}" as="ex" hint-placeholder-count="3">
+        <div data-reveal data-tilt data-interactive data-cursor="view" style="position:relative;overflow:hidden;border:1px solid var(--line);border-radius:22px;background:var(--panel);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);will-change:transform">
+          <div style="height:clamp(170px,22vh,230px);background:var(--irid);background-size:300% 300%;animation:irMove 9s ease infinite;position:relative"><div style="position:absolute;inset:0;background:radial-gradient(120% 120% at 30% 20%, transparent 40%, rgba(0,0,0,.28));mix-blend-mode:multiply"></div><div style="position:absolute;left:18px;top:14px;font-family:'Space Mono',monospace;font-size:42px;font-weight:700;color:rgba(0,0,0,.22)">0{{ ex.n }}</div></div>
+          <div style="padding:18px 22px 22px"><div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.16em;color:var(--accent);margin-bottom:7px">{{ ex.tag }}</div><div style="font-family:'Archivo Black';font-size:clamp(20px,2vw,28px);margin-bottom:6px">{{ ex.title }}</div><div style="font-size:14px;opacity:.72;line-height:1.5">{{ ex.desc }}</div></div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <footer id="contact" data-screen-label="Contact" style="position:relative;z-index:2;background:#0b0b0d;color:#f3f3f1;padding:clamp(70px,13vh,160px) clamp(16px,4vw,52px) clamp(28px,4vh,48px);border-top:1px solid var(--line)">
+    <div style="font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.2em;color:var(--accent);margin-bottom:20px">(05) — LET'S TALK</div>
+    <h2 data-reveal style="margin:0 0 clamp(34px,6vh,64px);font-family:'Archivo Black',sans-serif;font-size:clamp(46px,11vw,176px);line-height:.82;letter-spacing:-.035em">LET'S BUILD<br>SOMETHING <span style="background:var(--irid);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 5s linear infinite">GOOD.</span></h2>
+    <div data-2col style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:end">
+      <div>
+        <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.18em;color:#8a8a86;margin-bottom:14px">DROP A LINE</div>
+        <a href="mailto:hello@hassanilyas.dev" data-interactive data-cursor="link" data-magnetic style="display:inline-flex;align-items:center;gap:14px;font-family:'Archivo Black';font-size:clamp(22px,3vw,40px);letter-spacing:-.01em;border-bottom:2px solid rgba(243,243,241,.3);padding-bottom:8px;will-change:transform" style-hover="border-color:var(--accent)">hello@hassanilyas.dev <span style="font-size:.6em">↗</span></a>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-family:'Space Mono',monospace;font-size:13px;letter-spacing:.06em">
+        <sc-for list="{{ socials }}" as="s" hint-placeholder-count="4">
+          <a href="{{ s.href }}" target="_blank" rel="noopener" data-interactive data-cursor="link" style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border:1px solid rgba(243,243,241,.18);border-radius:14px;transition:background .25s,border-color .25s" style-hover="background:rgba(243,243,241,.06);border-color:rgba(243,243,241,.5)"><span>{{ s.label }}</span><span style="color:#8a8a86">↗</span></a>
+        </sc-for>
+      </div>
+    </div>
+    <div style="margin-top:clamp(48px,9vh,96px);display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;border-top:1px solid rgba(243,243,241,.14);padding-top:22px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;color:#8a8a86">
+      <span>© 2026 HASSAN ILYAS — ALL RIGHTS RESERVED</span>
+      <span>BUILT WITH THREE.JS &amp; TOO MUCH COFFEE</span>
+      <a href="#top" data-interactive data-cursor="link" data-target="top" onClick="{{ onNav }}" style="color:#f3f3f1;display:flex;align-items:center;gap:8px">BACK TO TOP ↑</a>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: { &quot;width&quot;: &quot;100%&quot;, &quot;height&quot;: &quot;100%&quot; },
+  &quot;theme&quot;: { &quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;light&quot;, &quot;dark&quot;], &quot;default&quot;: &quot;light&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Theme&quot; },
+  &quot;accent&quot;: { &quot;editor&quot;: &quot;color&quot;, &quot;default&quot;: &quot;#ff1e8c&quot;, &quot;options&quot;: [&quot;#ff1e8c&quot;, &quot;#2bd4ff&quot;, &quot;#7c5cff&quot;, &quot;#0c0c0d&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Theme&quot; },
+  &quot;motion&quot;: { &quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 8, &quot;min&quot;: 0, &quot;max&quot;: 10, &quot;step&quot;: 1, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Motion&quot;, &quot;unit&quot;: &quot;&quot; },
+  &quot;sound&quot;: { &quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Audio&quot; }
+}">
+class Component extends DCLogic {
+  state = { soundOn: false };
+
+  rootRef = React.createRef();
+  canvasRef = React.createRef();
+  cursorRef = React.createRef();
+  cursorDotRef = React.createRef();
+  cursorLabelRef = React.createRef();
+  grainRef = React.createRef();
+  progressRef = React.createRef();
+
+  _raf = 0;
+  _three = null;
+  _mouse = { px: 0, py: 0, nx: 0, ny: 0 };
+  _cur = { x: 0, y: 0 };
+  _scroll = { y: 0, p: 0 };
+  _spin = { vx: 0, vy: 0 };
+  _drag = { on: false, lx: 0, ly: 0, grab: null, mvx: 0, mvy: 0 };
+  _listeners = [];
+  _drags = [];
+  _mag = [];
+  _particles = null;
+
+  motion() { const m = this.props.motion; return (m == null ? 8 : m) / 8; }
+
+  componentDidMount() {
+    this._mounted = true;
+    this.applyTheme();
+    if (this.grainRef.current) {
+      this.grainRef.current.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
+    }
+    this.bindGlobal();
+    this.initInteractions();
+    this.initReveal();
+    this.initClock();
+    this.initParticles();
+    this.ensureThree(() => { try { this.initThree(); } catch (e) { console.warn('three init failed', e); } });
+    this._raf = requestAnimationFrame(this.loop);
+  }
+
+  componentDidUpdate(prev) {
+    if (prev.theme !== this.props.theme || prev.accent !== this.props.accent) this.applyTheme();
+  }
+
+  componentWillUnmount() {
+    this._mounted = false;
+    cancelAnimationFrame(this._raf);
+    this._listeners.forEach(([t, e, f, o]) => { try { t.removeEventListener(e, f, o); } catch (x) {} });
+    this._listeners = [];
+    if (this._clk) clearInterval(this._clk);
+    if (this._io) this._io.disconnect();
+    const T = this._three;
+    if (T) { try { T.renderer.dispose(); T.pmrem && T.pmrem.dispose(); } catch (e) {} }
+  }
+
+  on(target, ev, fn, opts) { target.addEventListener(ev, fn, opts); this._listeners.push([target, ev, fn, opts]); }
+
+  applyTheme() {
+    const r = this.rootRef.current; if (!r) return;
+    const dark = this.props.theme === 'dark';
+    r.style.setProperty('--accent', this.props.accent || '#ff1e8c');
+    if (dark) {
+      r.style.setProperty('--bg', '#0b0b0d'); r.style.setProperty('--bg2', '#15151a');
+      r.style.setProperty('--ink', '#f3f3f1'); r.style.setProperty('--mute', '#74747c');
+      r.style.setProperty('--line', 'rgba(255,255,255,.13)'); r.style.setProperty('--ghost', 'rgba(255,255,255,.055)');
+      r.style.setProperty('--wash', 'rgba(11,11,13,.5)'); r.style.setProperty('--panel', 'rgba(30,30,36,.45)');
+      document.body.style.background = '#0b0b0d'; document.body.style.color = '#f3f3f1';
+    } else {
+      r.style.setProperty('--bg', '#e9e9e7'); r.style.setProperty('--bg2', '#f4f4f2');
+      r.style.setProperty('--ink', '#0c0c0d'); r.style.setProperty('--mute', '#9b9b97');
+      r.style.setProperty('--line', 'rgba(12,12,13,.13)'); r.style.setProperty('--ghost', 'rgba(12,12,13,.05)');
+      r.style.setProperty('--wash', 'rgba(233,233,231,.6)'); r.style.setProperty('--panel', 'rgba(255,255,255,.46)');
+      document.body.style.background = '#e9e9e7'; document.body.style.color = '#0c0c0d';
+    }
+  }
+
+  bindGlobal() {
+    this.on(window, 'pointermove', this.onPointerMove, { passive: true });
+    this.on(window, 'pointerdown', this.onPointerDown);
+    this.on(window, 'pointerup', this.onPointerUp);
+    this.on(window, 'pointercancel', this.onPointerUp);
+    this.on(window, 'scroll', this.onScroll, { passive: true });
+    this.on(window, 'resize', this.onResize);
+    this.on(document, 'pointerover', this.onHover);
+    this.onScroll();
+  }
+
+  onHover = (e) => {
+    const el = e.target.closest && e.target.closest('[data-cursor]');
+    this.setCursorMode(el ? el.dataset.cursor : 'reset');
+    if (el) this.blip(680, 0.035, 'sine');
+  };
+  setCursorMode(mode) {
+    const cur = this.cursorRef.current, lab = this.cursorLabelRef.current;
+    if (!cur) return;
+    const map = { drag: ['DRAG', 62], throw: ['THROW', 62], view: ['VIEW', 62], link: ['', 30], reset: ['', 42] };
+    const m = map[mode] || map.reset;
+    cur.style.width = m[1] + 'px'; cur.style.height = m[1] + 'px'; cur.style.margin = (-m[1] / 2) + 'px 0 0 ' + (-m[1] / 2) + 'px';
+    cur.style.background = (m[0] ? 'var(--ink)' : 'transparent');
+    if (lab) { lab.textContent = m[0]; lab.style.opacity = m[0] ? '1' : '0'; }
+  }
+  updateCursor() {
+    const f = 0.2;
+    this._cur.x += (this._mouse.px - this._cur.x) * f;
+    this._cur.y += (this._mouse.py - this._cur.y) * f;
+    if (this.cursorRef.current) this.cursorRef.current.style.transform = 'translate(' + this._cur.x + 'px,' + this._cur.y + 'px)';
+    if (this.cursorDotRef.current) this.cursorDotRef.current.style.transform = 'translate(' + this._mouse.px + 'px,' + this._mouse.py + 'px)';
+  }
+
+  onPointerMove = (e) => {
+    this._mouse.px = e.clientX; this._mouse.py = e.clientY;
+    this._mouse.nx = (e.clientX / window.innerWidth) * 2 - 1;
+    this._mouse.ny = -((e.clientY / window.innerHeight) * 2 - 1);
+    if (this._drag.on) {
+      const dx = e.clientX - this._drag.lx, dy = e.clientY - this._drag.ly;
+      this._drag.lx = e.clientX; this._drag.ly = e.clientY;
+      if (this._drag.grab) this.dragShape(e); else this.dragOrbit(dx, dy);
+    }
+  };
+  onPointerDown = (e) => {
+    this.resumeAudio();
+    if (e.target.closest && e.target.closest('a,button,input,[data-interactive]')) return;
+    this._drag.on = true; this._drag.lx = e.clientX; this._drag.ly = e.clientY; this._drag.mvx = 0; this._drag.mvy = 0;
+    const hit = this.raycast(e); this._drag.grab = hit || null;
+    this.setCursorMode(hit ? 'throw' : 'drag');
+    this.blip(hit ? 340 : 220, 0.05, 'triangle');
+  };
+  onPointerUp = () => {
+    if (this._drag.on && !this._drag.grab) {
+      this._spin.vy += Math.max(-0.06, Math.min(0.06, this._drag.mvx * 0.006));
+      this._spin.vx += Math.max(-0.06, Math.min(0.06, this._drag.mvy * 0.006));
+    }
+    this._drag.on = false; this._drag.grab = null;
+    this.setCursorMode('reset');
+  };
+  dragOrbit(dx, dy) {
+    const T = this._three; if (!T || !T.modelSpin) return;
+    T.modelSpin.rotation.y += dx * 0.007; T.modelSpin.rotation.x += dy * 0.007;
+    this._drag.mvx = dx; this._drag.mvy = dy;
+  }
+  dragShape(e) {
+    const s = this._drag.grab; if (!s) return;
+    const pt = this.screenToPlane(e.clientX, e.clientY, s.mesh.position.z); if (!pt) return;
+    const vx = (pt.x - s.mesh.position.x) * 14, vy = (pt.y - s.mesh.position.y) * 14;
+    const cap = 18;
+    s.vel.set(Math.max(-cap, Math.min(cap, vx)), Math.max(-cap, Math.min(cap, vy)), 0);
+    s.mesh.position.x = pt.x; s.mesh.position.y = pt.y;
+  }
+  raycast(e) {
+    const THREE = window.THREE, T = this._three; if (!T) return null;
+    const v = new THREE.Vector2((e.clientX / window.innerWidth) * 2 - 1, -((e.clientY / window.innerHeight) * 2 - 1));
+    T.raycaster.setFromCamera(v, T.camera);
+    const hit = T.raycaster.intersectObjects(T.shapes.map(s => s.mesh), false)[0];
+    return hit ? T.shapes.find(s => s.mesh === hit.object) : null;
+  }
+  screenToPlane(cx, cy, planeZ) {
+    const THREE = window.THREE, T = this._three; if (!T) return null;
+    const v = new THREE.Vector3((cx / window.innerWidth) * 2 - 1, -((cy / window.innerHeight) * 2 - 1), 0.5);
+    v.unproject(T.camera);
+    const dir = v.sub(T.camera.position).normalize();
+    const dist = (planeZ - T.camera.position.z) / dir.z;
+    return T.camera.position.clone().add(dir.multiplyScalar(dist));
+  }
+
+  onScroll = () => {
+    this._scroll.y = window.scrollY || window.pageYOffset || 0;
+    const max = (document.documentElement.scrollHeight - window.innerHeight) || 1;
+    this._scroll.p = Math.min(this._scroll.y / max, 1);
+    if (this.progressRef.current) this.progressRef.current.style.width = (this._scroll.p * 100) + '%';
+  };
+  onResize = () => {
+    const T = this._three; if (!T) return;
+    T.camera.aspect = window.innerWidth / window.innerHeight; T.camera.updateProjectionMatrix();
+    T.renderer.setSize(window.innerWidth, window.innerHeight);
+  };
+
+  initInteractions() {
+    const root = this.rootRef.current; if (!root) return;
+    root.querySelectorAll('[data-tilt]').forEach(el => {
+      el.style.transition = 'transform .3s cubic-bezier(.2,.7,0,1)';
+      const move = (e) => { const r = el.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width - 0.5; const y = (e.clientY - r.top) / r.height - 0.5; el.style.transform = 'perspective(900px) rotateY(' + (x * 8) + 'deg) rotateX(' + (-y * 8) + 'deg) translateZ(8px)'; };
+      const leave = () => { el.style.transform = 'perspective(900px) rotateY(0) rotateX(0)'; };
+      this.on(el, 'pointermove', move); this.on(el, 'pointerleave', leave);
+    });
+    this._drags = [...root.querySelectorAll('[data-drag]')].map(el => {
+      const o = { el, x: 0, y: 0, vx: 0, vy: 0, drag: false, sx: 0, sy: 0 };
+      el.style.touchAction = 'none';
+      this.on(el, 'pointerdown', (e) => { e.stopPropagation(); o.drag = true; o.sx = e.clientX - o.x; o.sy = e.clientY - o.y; try { el.setPointerCapture(e.pointerId); } catch (x) {} this.blip(420, 0.05, 'triangle'); });
+      this.on(el, 'pointermove', (e) => { if (!o.drag) return; const nx = e.clientX - o.sx, ny = e.clientY - o.sy; o.vx = nx - o.x; o.vy = ny - o.y; o.x = nx; o.y = ny; });
+      const up = () => { if (o.drag) this.blip(300, 0.05, 'sine'); o.drag = false; };
+      this.on(el, 'pointerup', up); this.on(el, 'pointercancel', up);
+      return o;
+    });
+    this._mag = [...root.querySelectorAll('[data-magnetic]')].map(el => { el.style.transition = 'transform .18s cubic-bezier(.2,.7,0,1)'; return { el, x: 0, y: 0 }; });
+  }
+  updateDom() {
+    this._drags.forEach(o => {
+      if (!o.drag) { o.vx *= 0.9; o.vy *= 0.9; o.x += (0 - o.x) * 0.12 + o.vx; o.y += (0 - o.y) * 0.12 + o.vy; if (Math.abs(o.x) < 0.1 && Math.abs(o.vx) < 0.1) { o.x = 0; o.vx = 0; } if (Math.abs(o.y) < 0.1 && Math.abs(o.vy) < 0.1) { o.y = 0; o.vy = 0; } }
+      const rot = Math.max(-20, Math.min(20, o.vx * 0.7));
+      o.el.style.transform = 'translate(' + o.x + 'px,' + o.y + 'px) rotate(' + rot + 'deg)';
+    });
+    this._mag.forEach(m => {
+      const r = m.el.getBoundingClientRect(); const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const dx = this._mouse.px - cx, dy = this._mouse.py - cy; const d = Math.hypot(dx, dy); const R = 150;
+      let tx = 0, ty = 0; if (d < R) { tx = dx * 0.34; ty = dy * 0.34; }
+      m.x += (tx - m.x) * 0.15; m.y += (ty - m.y) * 0.15;
+      m.el.style.transform = 'translate(' + m.x + 'px,' + m.y + 'px)';
+    });
+    this.drawParticles();
+  }
+
+  initReveal() {
+    const root = this.rootRef.current; if (!root) return;
+    const els = [...root.querySelectorAll('[data-reveal]')];
+    if (!('IntersectionObserver' in window)) return;
+    els.forEach((el, i) => { el.style.opacity = '0'; el.style.transform = 'translateY(30px)'; el.style.transition = 'opacity .9s cubic-bezier(.2,.7,0,1),transform .9s cubic-bezier(.2,.7,0,1)'; el.style.transitionDelay = ((i % 5) * 55) + 'ms'; });
+    this._io = new IntersectionObserver((ents) => { ents.forEach(en => { if (en.isIntersecting) { en.target.style.opacity = '1'; en.target.style.transform = 'none'; this._io.unobserve(en.target); } }); }, { threshold: 0.12, rootMargin: '0px 0px -7% 0px' });
+    els.forEach(el => this._io.observe(el));
+  }
+
+  initClock() {
+    const upd = () => { const root = this.rootRef.current; if (!root) return; root.querySelectorAll('[data-clock]').forEach(el => { try { el.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); } catch (x) {} }); };
+    upd(); this._clk = setInterval(upd, 1000);
+  }
+
+  initParticles() {
+    const root = this.rootRef.current; if (!root) return;
+    const cv = root.querySelector('[data-particles]'); if (!cv) return;
+    const ctx = cv.getContext('2d'); const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const resize = () => { const r = cv.getBoundingClientRect(); cv.width = Math.max(1, r.width * dpr); cv.height = Math.max(1, r.height * dpr); };
+    resize(); this.on(window, 'resize', resize);
+    const N = 48, ps = [];
+    for (let i = 0; i < N; i++) ps.push({ x: Math.random(), y: Math.random(), vx: (Math.random() - 0.5) * 0.0011, vy: (Math.random() - 0.5) * 0.0011 });
+    this._particles = { cv, ctx, ps, dpr };
+  }
+  drawParticles() {
+    const P = this._particles; if (!P) return;
+    const { cv, ctx, ps, dpr } = P; const w = cv.width, h = cv.height; if (!w || !h) return;
+    const dark = this.props.theme === 'dark'; const base = dark ? '243,243,241' : '12,12,13';
+    ctx.clearRect(0, 0, w, h);
+    const r = cv.getBoundingClientRect(); const mx = (this._mouse.px - r.left) / r.width, my = (this._mouse.py - r.top) / r.height;
+    const inside = mx >= 0 && mx <= 1 && my >= 0 && my <= 1;
+    ps.forEach(p => { p.x += p.vx; p.y += p.vy; if (p.x < 0 || p.x > 1) p.vx *= -1; if (p.y < 0 || p.y > 1) p.vy *= -1; if (inside) { const dx = mx - p.x, dy = my - p.y, d = Math.hypot(dx, dy); if (d < 0.26) { p.vx += dx * 0.00006; p.vy += dy * 0.00006; } } p.vx = Math.max(-0.004, Math.min(0.004, p.vx)); p.vy = Math.max(-0.004, Math.min(0.004, p.vy)); });
+    const lim = 72 * dpr;
+    for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) { const a = ps[i], b = ps[j]; const dx = (a.x - b.x) * w, dy = (a.y - b.y) * h; const d = Math.hypot(dx, dy); if (d < lim) { ctx.strokeStyle = 'rgba(' + base + ',' + (0.16 * (1 - d / lim)) + ')'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x * w, a.y * h); ctx.lineTo(b.x * w, b.y * h); ctx.stroke(); } }
+    ctx.fillStyle = 'rgba(' + base + ',.85)';
+    ps.forEach(p => { ctx.beginPath(); ctx.arc(p.x * w, p.y * h, 1.7 * dpr, 0, 7); ctx.fill(); });
+  }
+
+  resumeAudio() {
+    if (!this._ac) { try { this._ac = new (window.AudioContext || window.webkitAudioContext)(); this._master = this._ac.createGain(); this._master.gain.value = this.state.soundOn ? 0.45 : 0.0; this._master.connect(this._ac.destination); } catch (e) { this._ac = null; } }
+    if (this._ac && this._ac.state === 'suspended') this._ac.resume();
+  }
+  blip(freq, dur, type) {
+    if (!this._ac || !this._master || !this.state.soundOn) return;
+    try { const o = this._ac.createOscillator(), g = this._ac.createGain(); o.type = type || 'sine'; o.frequency.value = freq; o.connect(g); g.connect(this._master); const t = this._ac.currentTime; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3, t + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, t + (dur || 0.08)); o.start(t); o.stop(t + (dur || 0.08) + 0.02); } catch (e) {}
+    if (navigator.vibrate) { try { navigator.vibrate(7); } catch (e) {} }
+  }
+  toggleSound = () => {
+    this.resumeAudio();
+    const on = !this.state.soundOn;
+    this.setState({ soundOn: on });
+    if (this._master) this._master.gain.value = on ? 0.45 : 0.0;
+    if (on) setTimeout(() => this.blip(880, 0.08, 'sine'), 30);
+  };
+
+  ensureThree(cb) {
+    if (window.__THREE_READY && window.THREE) { cb(); return; }
+    this.on(window, 'three-ready', () => cb(), { once: true });
+    let n = 0; const iv = setInterval(() => { if (window.__THREE_READY && window.THREE) { clearInterval(iv); } else if (++n > 300) { clearInterval(iv); } }, 50);
+  }
+  makeEnv(THREE) {
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
+    const g = c.getContext('2d');
+    const grd = g.createLinearGradient(0, 0, 0, 512);
+    grd.addColorStop(0.00, '#ffffff'); grd.addColorStop(0.30, '#dfe7ff');
+    grd.addColorStop(0.48, '#5566ff'); grd.addColorStop(0.60, '#241133');
+    grd.addColorStop(0.78, '#0a0a12'); grd.addColorStop(1.00, '#000007');
+    g.fillStyle = grd; g.fillRect(0, 0, 1024, 512);
+    g.globalCompositeOperation = 'screen';
+    const streak = (y, h, col) => { g.fillStyle = col; g.fillRect(0, y, 1024, h); };
+    streak(70, 14, 'rgba(255,255,255,0.95)');
+    streak(150, 18, 'rgba(43,212,255,0.7)');
+    streak(250, 22, 'rgba(255,30,140,0.7)');
+    streak(330, 14, 'rgba(155,124,255,0.6)');
+    for (let i = 0; i < 22; i++) { g.fillStyle = 'rgba(255,255,255,' + (0.05 + Math.random() * 0.25) + ')'; const w = 20 + Math.random() * 120; g.fillRect(Math.random() * 1024, Math.random() * 460, w, 3); }
+    g.globalCompositeOperation = 'source-over';
+    const tex = new THREE.CanvasTexture(c);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+  initThree() {
+    const THREE = window.THREE; const { GLTFLoader, RoomEnvironment } = window.THREE_ADDONS;
+    const canvas = this.canvasRef.current; if (!canvas) return;
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.08;
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 0, 8.5);
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const envTex = this.makeEnv(THREE);
+    scene.environment = pmrem.fromEquirectangular(envTex).texture;
+    envTex.dispose();
+
+    const key = new THREE.DirectionalLight(0xffffff, 1.5); key.position.set(4, 6, 7); scene.add(key);
+    const c1 = new THREE.PointLight(0x2bd4ff, 26, 50); c1.position.set(-6, 3, 5); scene.add(c1);
+    const c2 = new THREE.PointLight(0xff1e8c, 22, 50); c2.position.set(6, -3, 6); scene.add(c2);
+    const c3 = new THREE.PointLight(0x9b7cff, 16, 50); c3.position.set(0, 6, -4); scene.add(c3);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+
+    const modelTilt = new THREE.Group(); const modelSpin = new THREE.Group();
+    modelTilt.add(modelSpin); scene.add(modelTilt); modelTilt.position.set(1.4, 0.1, 0);
+
+    this.modelMat = new THREE.MeshPhysicalMaterial({ color: new THREE.Color(0.6, 0.62, 0.68), metalness: 0.55, roughness: 0.45, clearcoat: 0.3, clearcoatRoughness: 0.12, iridescence: 0.06, iridescenceIOR: 1.3, iridescenceThicknessRange: [100, 460], envMapIntensity: 0.9, reflectivity: 0.6, side: THREE.DoubleSide });
+    new GLTFLoader().load('assets/model.glb', (g) => {
+      const root = g.scene; root.traverse(o => { if (o.isMesh) { o.material = this.modelMat; } });
+      const box = new THREE.Box3().setFromObject(root); const size = box.getSize(new THREE.Vector3()); const center = box.getCenter(new THREE.Vector3());
+      const maxd = Math.max(size.x, size.y, size.z) || 1; const s = 3.7 / maxd; const sz = s * 3.6;
+      root.scale.set(s, s, sz); root.position.set(-center.x * s, -center.y * s, -center.z * sz);
+      root.rotation.x = -0.32; root.rotation.z = 0.06;
+      this._model = root; modelSpin.add(root);
+    }, undefined, (err) => { console.warn('GLB load failed, using fallback', err); modelSpin.add(new THREE.Mesh(new THREE.IcosahedronGeometry(1.7, 0), this.modelMat)); });
+
+    const geos = [
+      new THREE.TorusGeometry(0.62, 0.26, 32, 90),
+      new THREE.IcosahedronGeometry(0.74, 0),
+      new THREE.CapsuleGeometry(0.36, 0.78, 18, 32),
+      new THREE.TorusKnotGeometry(0.46, 0.16, 140, 18),
+      new THREE.OctahedronGeometry(0.8, 0)
+    ];
+    const homes = [
+      new THREE.Vector3(-3.3, 1.1, -1.4), new THREE.Vector3(3.5, 1.7, -2.0),
+      new THREE.Vector3(-2.9, -1.7, -1.0), new THREE.Vector3(3.1, -1.5, -2.4), new THREE.Vector3(0.4, 2.3, -3.0)
+    ];
+    const att = [0xffd6ef, 0xc9ecff, 0xe2d6ff, 0xd6ffe9, 0xfff0d6];
+    const shapes = geos.map((geo, i) => {
+      const mat = new THREE.MeshPhysicalMaterial({ transmission: 1, thickness: 1.4, roughness: 0.06, ior: 1.46, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.06, iridescence: 1, iridescenceIOR: 1.32, iridescenceThicknessRange: [120, 520], envMapIntensity: 1.3, transparent: true, color: 0xffffff, attenuationDistance: 4, attenuationColor: new THREE.Color(att[i]) });
+      const mesh = new THREE.Mesh(geo, mat); mesh.position.copy(homes[i]); scene.add(mesh);
+      return { mesh, home: homes[i].clone(), vel: new THREE.Vector3(), spin: new THREE.Vector3((Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.6, (Math.random() - 0.5) * 0.6), seed: Math.random() * 6.28 };
+    });
+
+    this._three = { renderer, scene, camera, pmrem, modelTilt, modelSpin, shapes, raycaster: new THREE.Raycaster(), clock: new THREE.Clock() };
+  }
+  updateScene(dt) {
+    const T = this._three; const p = this._scroll.p; const ms = this.motion();
+    if (this.modelMat) { const k = Math.max(0, Math.min(1, p / 0.32)); const m = this.modelMat; m.metalness = 0.7 + k * 0.3; m.roughness = 0.32 - k * 0.28; m.clearcoat = 0.5 + k * 0.5; m.iridescence = 0.35 + k * 0.65; m.envMapIntensity = 1.1 + k * 0.9; const c = 0.62 + 0.38 * k; m.color.setRGB(c, c, Math.min(1, c + 0.06)); }
+    const tilt = T.modelTilt, spin = T.modelSpin;
+    if (tilt) {
+      tilt.rotation.x += (this._mouse.ny * 0.28 * ms - tilt.rotation.x) * 0.05;
+      tilt.rotation.y += (this._mouse.nx * 0.4 * ms - tilt.rotation.y) * 0.05;
+      tilt.position.x += ((1.6 + p * 1.8) - tilt.position.x) * 0.06;
+      tilt.position.y += ((0.15 + p * 1.3) - tilt.position.y) * 0.06;
+      const sc = Math.max(0.52, 1 - p * 0.48); tilt.scale.x += (sc - tilt.scale.x) * 0.06; tilt.scale.y = tilt.scale.z = tilt.scale.x;
+    }
+    if (spin) { spin.rotation.y += 0.0042 * ms + this._spin.vy; spin.rotation.x += this._spin.vx; this._spin.vx *= 0.93; this._spin.vy *= 0.93; }
+    const cam = T.camera; cam.position.y += (-p * 1.3 - cam.position.y) * 0.06; cam.position.z += (8.5 + p * 2.4 - cam.position.z) * 0.06; cam.lookAt(0, -p * 0.5, 0);
+    const cw = this.screenToPlane(this._mouse.px, this._mouse.py, 0); const t = performance.now() * 0.001;
+    T.shapes.forEach(s => {
+      const m = s.mesh, home = s.home;
+      s.vel.x += (home.x - m.position.x) * 0.7 * dt;
+      s.vel.y += ((home.y + Math.sin(t * 0.6 + s.seed) * 0.35) - m.position.y) * 0.7 * dt;
+      s.vel.z += (home.z - m.position.z) * 0.7 * dt;
+      if (cw) { const dx = m.position.x - cw.x, dy = m.position.y - cw.y, dz = m.position.z - cw.z; const dl = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1; if (dl < 1.9) { const f = (1.9 - dl) * 3.2 * dt / dl; s.vel.x += dx * f; s.vel.y += dy * f; s.vel.z += dz * f; } }
+      m.position.addScaledVector(s.vel, dt); s.vel.multiplyScalar(0.945);
+      if (m.position.x < -5) { m.position.x = -5; s.vel.x *= -0.6; } if (m.position.x > 5) { m.position.x = 5; s.vel.x *= -0.6; }
+      if (m.position.y < -3.3) { m.position.y = -3.3; s.vel.y *= -0.6; } if (m.position.y > 3.4) { m.position.y = 3.4; s.vel.y *= -0.6; }
+      if (m.position.z < -4.5) { m.position.z = -4.5; s.vel.z *= -0.6; } if (m.position.z > 1) { m.position.z = 1; s.vel.z *= -0.6; }
+      m.rotation.x += s.spin.x * dt * ms; m.rotation.y += s.spin.y * dt * ms; m.rotation.z += s.spin.z * dt * ms;
+    });
+  }
+
+  loop = () => {
+    this._raf = requestAnimationFrame(this.loop);
+    this.updateCursor(); this.updateDom();
+    const T = this._three; if (T) { const dt = Math.min(T.clock.getDelta(), 0.05); this.updateScene(dt); T.renderer.render(T.scene, T.camera); }
+  };
+
+  onNav = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const t = e.currentTarget && e.currentTarget.dataset ? e.currentTarget.dataset.target : null;
+    this.blip(520, 0.06, 'sine');
+    if (t === 'top') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    const el = t ? document.getElementById(t) : null;
+    if (el) { const y = el.getBoundingClientRect().top + window.scrollY - 64; window.scrollTo({ top: y, behavior: 'smooth' }); }
+  };
+  scrollNext = () => {
+    this.blip(520, 0.06, 'sine');
+    const el = document.getElementById('about');
+    if (el) { const y = el.getBoundingClientRect().top + window.scrollY - 64; window.scrollTo({ top: y, behavior: 'smooth' }); }
+  };
+
+  renderVals() {
+    return {
+      rootRef: this.rootRef, canvasRef: this.canvasRef, cursorRef: this.cursorRef, cursorDotRef: this.cursorDotRef,
+      cursorLabelRef: this.cursorLabelRef, grainRef: this.grainRef, progressRef: this.progressRef,
+      onNav: this.onNav, scrollNext: this.scrollNext, toggleSound: this.toggleSound,
+      soundLabel: this.state.soundOn ? 'SOUND ON' : 'SOUND OFF',
+      navLinks: [
+        { id: 'about', label: 'About' },
+        { id: 'skills', label: 'Skills' },
+        { id: 'experience', label: 'Journey' },
+        { id: 'playground', label: 'Playground' },
+        { id: 'contact', label: 'Contact' }
+      ],
+      skills: [
+        { label: 'FRONTEND', n: 1, items: ['React / Next.js', 'TypeScript', 'Three.js / R3F', 'WebGL · GLSL', 'GSAP · Framer'] },
+        { label: 'CREATIVE', n: 2, items: ['Shaders', 'Blender', 'Spline', 'Figma', 'Motion design'] },
+        { label: 'BACKEND', n: 3, items: ['Node.js', 'WebSockets', 'Postgres', 'REST · tRPC', 'Edge / serverless'] },
+        { label: 'CRAFT', n: 4, items: ['Performance', 'Accessibility', 'Design systems', 'Prototyping', 'Art direction'] }
+      ],
+      timeline: [
+        { year: '2024 — NOW', role: 'Creative Developer', org: 'FREELANCE / STUDIO', note: 'Building immersive 3D sites, WebGL campaigns and interactive product stories for agencies and founders.' },
+        { year: '2022 — 24', role: 'Frontend Engineer', org: 'PRODUCT TEAM', note: 'Shipped a design system and real-time dashboards; owned the motion & interaction layer end to end.' },
+        { year: '2020 — 22', role: 'Web Developer', org: 'AGENCY', note: 'Award-leaning marketing sites — where I fell hard for shaders, GSAP and the craft of feel.' },
+        { year: '2019', role: 'Started the journey', org: 'SELF-TAUGHT', note: 'First lines of JavaScript, first canvas sketch, first "how did they do that?" rabbit hole.' }
+      ],
+      experiments: [
+        { n: 2, tag: 'GLSL · FRAGMENT', title: 'Liquid Chrome', desc: 'A raymarched metaball surface with iridescent thin-film shading.' },
+        { n: 3, tag: 'PHYSICS · 2D', title: 'Throwable Toys', desc: 'Spring-damped bodies you can grab, fling and watch settle.' },
+        { n: 4, tag: 'TYPE · GENERATIVE', title: 'Kinetic Type', desc: 'Variable-font choreography driven by scroll velocity.' }
+      ],
+      socials: [
+        { label: 'GITHUB', href: 'https://github.com' },
+        { label: 'LINKEDIN', href: 'https://linkedin.com' },
+        { label: 'TWITTER / X', href: 'https://x.com' },
+        { label: 'DRIBBBLE', href: 'https://dribbble.com' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
